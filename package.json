@@ -1,0 +1,1 @@
+{"name":"umair-traders-crm","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vite --host 0.0.0.0","build":"vite build","preview":"vite preview"},"dependencies":{"firebase":"^12.4.0","html2canvas":"^1.4.1","jspdf":"^3.0.3","vite":"^7.1.0"}}

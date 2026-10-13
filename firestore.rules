@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function allowed() { return request.auth != null && exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)); }
+  match /authorizedUsers/{uid} { allow read: if request.auth != null && request.auth.uid == uid; allow write: if false; }
+  match /invoices/{id} { allow read, create, update, delete: if allowed(); }
+  match /customers/{id} { allow read, create, update, delete: if allowed(); }
+  match /settings/{id} { allow read, write: if allowed(); }
+  match /counters/{id} { allow read, write: if allowed(); }
+ }
+}
