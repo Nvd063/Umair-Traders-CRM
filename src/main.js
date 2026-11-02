@@ -23,13 +23,17 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 
-import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
 const $ = (selector) => document.querySelector(selector);
 
 const money = (value) =>
   "PKR " +
+  Number(value || 0).toLocaleString("en-PK", {
+    maximumFractionDigits: 2,
+  });
+
+const numberText = (value) =>
   Number(value || 0).toLocaleString("en-PK", {
     maximumFractionDigits: 2,
   });
@@ -83,14 +87,12 @@ const state = {
   editId: null,
   viewId: null,
   items: [],
-  stamp: true,
 };
 
 const app = $("#app");
 
 function notice(message, bad = false) {
   const element = $("#notice");
-
   if (!element) return;
 
   element.textContent = message;
@@ -102,9 +104,7 @@ function notice(message, bad = false) {
   }, 5000);
 }
 
-/* =========================
-   AUTHENTICATION
-========================= */
+/* AUTHENTICATION */
 
 function login() {
   app.innerHTML = `
@@ -126,15 +126,15 @@ function login() {
         <form id="loginForm">
           <label>
             Email address
-            <input id="email" type="email"
-              required autocomplete="username"
+            <input id="email" type="email" required
+              autocomplete="username"
               placeholder="name@example.com">
           </label>
 
           <label>
             Password
-            <input id="password" type="password"
-              required autocomplete="current-password"
+            <input id="password" type="password" required
+              autocomplete="current-password"
               placeholder="Enter password">
           </label>
 
@@ -167,14 +167,13 @@ function login() {
         $("#password").value,
       );
     } catch (error) {
-      console.error("Firebase login:", error);
-
       const messages = {
         "auth/invalid-credential": "Incorrect email or password.",
         "auth/user-disabled": "This account is disabled.",
         "auth/invalid-api-key": "Invalid Firebase API key.",
         "auth/network-request-failed": "Network connection failed.",
-        "auth/operation-not-allowed": "Email/password login is disabled.",
+        "auth/operation-not-allowed":
+          "Email/password login is disabled.",
       };
 
       notice(messages[error.code] || error.message, true);
@@ -187,9 +186,7 @@ function login() {
   };
 }
 
-/* =========================
-   FIRESTORE DATA
-========================= */
+/* FIRESTORE */
 
 async function load() {
   const [invoicesSnapshot, customersSnapshot] =
@@ -214,9 +211,7 @@ async function load() {
   }));
 }
 
-/* =========================
-   APPLICATION LAYOUT
-========================= */
+/* APPLICATION */
 
 function shell() {
   const pages = [
@@ -230,7 +225,7 @@ function shell() {
     <div class="layout">
       <aside class="sidebar">
         <div class="brand">
-          <img src="/assets/logo.jfif" alt="Umair Traders">
+          <img src="/assets/logo.png" alt="Umair Traders">
           <span>
             Billing CRM
             <small>Management portal</small>
@@ -254,7 +249,7 @@ function shell() {
 
         <div class="side-bottom">
           Umair Traders<br>
-          <small>Hardware & Sanitary Store</small>
+          <small>General Order Supplier</small>
         </div>
       </aside>
 
@@ -272,6 +267,7 @@ function shell() {
               }
             </span>
           </span>
+
           <button class="logout" id="logout">
             Log out ↗
           </button>
@@ -304,11 +300,7 @@ function navigate(page) {
 
   if (page === "new") {
     state.items = [
-      {
-        description: "",
-        qty: "1 pcs",
-        rate: 0,
-      },
+      { description: "", qty: "1 pcs", rate: 0 },
     ];
   }
 
@@ -323,9 +315,7 @@ function render() {
   else if (state.page === "view") view();
 }
 
-/* =========================
-   DASHBOARD
-========================= */
+/* DASHBOARD */
 
 function dashboard() {
   const sum = state.invoices.reduce(
@@ -353,7 +343,6 @@ function dashboard() {
         <h1>Dashboard</h1>
         <p>Keep track of invoices and billing activity.</p>
       </div>
-
       <button class="primary" id="newBill">
         + Create Invoice
       </button>
@@ -380,14 +369,12 @@ function dashboard() {
           View all →
         </button>
       </div>
-
       ${invoiceTable(state.invoices.slice(0, 6))}
     </section>
   `;
 
   $("#newBill").onclick = () => navigate("new");
   $("#allBills").onclick = () => navigate("invoices");
-
   bindView();
 }
 
@@ -423,7 +410,8 @@ function invoiceTable(rows) {
                   <td>${esc(invoice.date)}</td>
                   <td><b>${money(invoice.total)}</b></td>
                   <td>
-                    <button class="link" data-view="${esc(invoice.id)}">
+                    <button class="link"
+                      data-view="${esc(invoice.id)}">
                       View →
                     </button>
                   </td>
@@ -447,9 +435,7 @@ function bindView() {
   });
 }
 
-/* =========================
-   INVOICES LIST
-========================= */
+/* INVOICES */
 
 function invoices() {
   $("#content").innerHTML = `
@@ -459,7 +445,6 @@ function invoices() {
         <h1>Invoices</h1>
         <p>Find, review and download your bills.</p>
       </div>
-
       <button class="primary" id="newBill">
         + New Invoice
       </button>
@@ -470,7 +455,6 @@ function invoices() {
         <input id="search"
           placeholder="Search invoice or customer...">
       </div>
-
       <div id="invoiceList">
         ${invoiceTable(state.invoices)}
       </div>
@@ -495,9 +479,7 @@ function invoices() {
   bindView();
 }
 
-/* =========================
-   CUSTOMERS
-========================= */
+/* CUSTOMERS */
 
 function customers() {
   $("#content").innerHTML = `
@@ -598,9 +580,7 @@ function customers() {
   };
 }
 
-/* =========================
-   INVOICE EDITOR
-========================= */
+/* INVOICE EDITOR */
 
 function editor() {
   const existing = state.editId
@@ -627,14 +607,12 @@ function editor() {
         <h1>${existing ? "Edit" : "Create"} Invoice</h1>
         <p>Enter details and generate a professional invoice.</p>
       </div>
-
       <button class="secondary" id="back">
         ← Back
       </button>
     </div>
 
     <form id="invoiceForm">
-
       <section class="panel">
         <div class="panel-title">
           <h2>Invoice details</h2>
@@ -704,7 +682,6 @@ function editor() {
                 <th></th>
               </tr>
             </thead>
-
             <tbody id="itemRows"></tbody>
           </table>
         </div>
@@ -776,15 +753,12 @@ function editor() {
     drawRows();
 
     const index = state.items.length - 1;
-
     const input = document.querySelector(
       `#itemRows [data-i="${index}"][data-k="description"]`,
     );
 
     if (input) {
-      // Focus first, then position the new item.
       input.focus({ preventScroll: true });
-
       requestAnimationFrame(() => {
         input.scrollIntoView({
           behavior: "smooth",
@@ -796,37 +770,27 @@ function editor() {
   };
 
   $("#discount").oninput = calc;
-
   drawRows();
-
   $("#invoiceForm").onsubmit = saveInvoice;
 }
 
-/* =========================
-   MOBILE-FRIENDLY ITEM ROWS
-========================= */
+/* MOBILE ITEM ROWS */
 
 function drawRows() {
   const target = $("#itemRows");
-
   if (!target) return;
 
   target.innerHTML = state.items
     .map(
       (item, index) => `
         <tr class="invoice-item-row">
-
           <td class="item-description">
             <div class="mobile-item-heading">
               <strong>Item #${index + 1}</strong>
-
-              <button
-                type="button"
+              <button type="button"
                 class="remove mobile-remove"
                 data-remove="${index}"
-                aria-label="Remove item">
-                ×
-              </button>
+                aria-label="Remove item">×</button>
             </div>
 
             <label class="mobile-field-label"
@@ -882,23 +846,17 @@ function drawRows() {
           </td>
 
           <td class="item-amount">
-            <span class="mobile-field-label">
-              Amount
-            </span>
-
+            <span class="mobile-field-label">Amount</span>
             <strong class="amount">
               ${money(itemAmount(item))}
             </strong>
           </td>
 
           <td class="item-remove-cell">
-            <button
-              type="button"
+            <button type="button"
               class="remove"
               data-remove="${index}"
-              aria-label="Remove item">
-              ×
-            </button>
+              aria-label="Remove item">×</button>
           </td>
         </tr>
       `,
@@ -928,7 +886,6 @@ function drawRows() {
       }
 
       const removedIndex = Number(button.dataset.remove);
-
       state.items.splice(removedIndex, 1);
       drawRows();
 
@@ -937,11 +894,11 @@ function drawRows() {
         state.items.length - 1,
       );
 
-      const nextInput = target.querySelector(
-        `[data-i="${nextIndex}"][data-k="description"]`,
-      );
-
-      nextInput?.focus({ preventScroll: true });
+      target
+        .querySelector(
+          `[data-i="${nextIndex}"][data-k="description"]`,
+        )
+        ?.focus({ preventScroll: true });
     };
   });
 
@@ -957,27 +914,18 @@ function calc() {
 
     subtotal += amount;
 
-    const amountElement = row.querySelector(".amount");
-
-    if (amountElement) {
-      amountElement.textContent = money(amount);
-    }
+    const element = row.querySelector(".amount");
+    if (element) element.textContent = money(amount);
   });
 
   const discount = Number($("#discount")?.value || 0);
-
   const total = Math.max(0, subtotal - discount);
 
   const totalElement = $("#total");
-
-  if (totalElement) {
-    totalElement.textContent = money(total);
-  }
+  if (totalElement) totalElement.textContent = money(total);
 }
 
-/* =========================
-   SAVE INVOICE
-========================= */
+/* SAVE INVOICE */
 
 async function saveInvoice(event) {
   event.preventDefault();
@@ -1079,18 +1027,15 @@ async function saveInvoice(event) {
   } catch (error) {
     notice("Could not save invoice: " + error.message, true);
   } finally {
-    button.disabled = false;
+    if (button.isConnected) button.disabled = false;
   }
 }
 
-/* =========================
-   A4 INVOICE TEMPLATE
-========================= */
+/* INVOICE HTML PREVIEW */
 
 function invoiceHTML(invoice) {
   return `
     <article class="paper" id="paper">
-
       <div class="paper-top">
         <img class="paper-logo"
           src="/assets/logo.png"
@@ -1107,16 +1052,12 @@ function invoiceHTML(invoice) {
       <div class="paper-meta">
         <div>
           <small>BILL TO</small>
-          <strong>
-            ${esc(invoice.customerName || "Walk-in Customer")}
-          </strong>
-
+          <strong>${esc(invoice.customerName || "Walk-in Customer")}</strong>
           ${
             invoice.customerPhone
               ? `<span>${esc(invoice.customerPhone)}</span>`
               : ""
           }
-
           ${
             invoice.customerAddress
               ? `<span>${esc(invoice.customerAddress)}</span>`
@@ -1141,7 +1082,6 @@ function invoiceHTML(invoice) {
             <th>AMOUNT</th>
           </tr>
         </thead>
-
         <tbody>
           ${(invoice.items || [])
             .map(
@@ -1150,14 +1090,8 @@ function invoiceHTML(invoice) {
                   <td>${index + 1}</td>
                   <td>${esc(item.description)}</td>
                   <td>${esc(normalizedQty(item))}</td>
-                  <td>
-                    ${Number(item.rate).toLocaleString("en-PK")}
-                  </td>
-                  <td>
-                    ${itemAmount(item).toLocaleString("en-PK", {
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
+                  <td>${numberText(item.rate)}</td>
+                  <td>${numberText(itemAmount(item))}</td>
                 </tr>
               `,
             )
@@ -1170,7 +1104,6 @@ function invoiceHTML(invoice) {
           <span>Subtotal</span>
           <b>${money(invoice.subtotal)}</b>
         </div>
-
         ${
           invoice.discount
             ? `
@@ -1181,7 +1114,6 @@ function invoiceHTML(invoice) {
             `
             : ""
         }
-
         <div class="paper-grand">
           <span>GRAND TOTAL</span>
           <b>${money(invoice.total)}</b>
@@ -1222,9 +1154,565 @@ function invoiceHTML(invoice) {
   `;
 }
 
-/* =========================
-   VIEW / DOWNLOAD / PRINT
-========================= */
+/* PROFESSIONAL MULTI-PAGE PDF GENERATOR */
+
+const PDF_CONFIG = {
+  width: 210,
+  height: 297,
+  left: 15,
+  right: 195,
+  top: 14,
+  bottom: 282,
+  navy: [23, 62, 107],
+  ink: [23, 33, 47],
+  muted: [55, 70, 89],
+  light: [232, 239, 247],
+  line: [211, 220, 231],
+};
+
+function setPDFColor(pdf, rgb) {
+  pdf.setTextColor(...rgb);
+}
+
+function pdfText(pdf, value, x, y, options = {}) {
+  pdf.text(String(value ?? ""), x, y, options);
+}
+
+function loadImageData(url) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+
+    image.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0);
+
+        resolve({
+          data: canvas.toDataURL("image/png"),
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        });
+      } catch {
+        resolve(null);
+      }
+    };
+
+    image.onerror = () => resolve(null);
+    image.src = url;
+  });
+}
+
+function fitImage(image, x, y, maxW, maxH) {
+  const ratio = Math.min(
+    maxW / image.width,
+    maxH / image.height,
+  );
+
+  return {
+    x,
+    y,
+    width: image.width * ratio,
+    height: image.height * ratio,
+  };
+}
+
+function drawPDFHeader(pdf, invoice, logo, pageIndex) {
+  const C = PDF_CONFIG;
+
+  if (logo) {
+    const size = fitImage(logo, 15, 12, 43, 30);
+    pdf.addImage(
+      logo.data,
+      "PNG",
+      size.x,
+      size.y,
+      size.width,
+      size.height,
+    );
+  } else {
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(17);
+    setPDFColor(pdf, C.ink);
+    pdfText(pdf, "UMAIR TRADERS", 15, 26);
+    pdf.setFontSize(8);
+    pdfText(pdf, "GENERAL ORDER SUPPLIER", 15, 32);
+  }
+
+  setPDFColor(pdf, C.navy);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(19);
+  pdfText(pdf, "INVOICE", 195, 22, {
+    align: "right",
+  });
+
+  pdf.setFontSize(9);
+  pdfText(pdf, invoice.number || "", 195, 29, {
+    align: "right",
+  });
+
+  pdf.setDrawColor(...C.navy);
+  pdf.setLineWidth(0.55);
+  pdf.line(15, 45, 195, 45);
+
+  setPDFColor(pdf, C.muted);
+  pdf.setFontSize(8);
+  pdf.setFont("helvetica", "bold");
+  pdfText(pdf, "BILL TO", 15, 53);
+
+  pdfText(pdf, "INVOICE DATE", 195, 53, {
+    align: "right",
+  });
+
+  setPDFColor(pdf, C.ink);
+  pdf.setFontSize(10);
+  pdfText(
+    pdf,
+    invoice.customerName || "Walk-in Customer",
+    15,
+    59,
+  );
+
+  pdfText(pdf, invoice.date || "", 195, 59, {
+    align: "right",
+  });
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(8.2);
+
+  let detailY = 64;
+
+  if (invoice.customerPhone) {
+    pdfText(pdf, invoice.customerPhone, 15, detailY);
+    detailY += 4.5;
+  }
+
+  if (invoice.customerAddress) {
+    const addressLines = pdf.splitTextToSize(
+      invoice.customerAddress,
+      112,
+    ).slice(0, 3);
+
+    addressLines.forEach((line) => {
+      pdfText(pdf, line, 15, detailY);
+      detailY += 4.5;
+    });
+  }
+
+  pdfText(pdf, "Currency: PKR", 195, 65, {
+    align: "right",
+  });
+
+  if (pageIndex > 0) {
+    pdf.setFont("helvetica", "italic");
+    pdf.setFontSize(7);
+    setPDFColor(pdf, C.muted);
+    pdfText(pdf, "Continued invoice", 195, 71, {
+      align: "right",
+    });
+  }
+
+  return Math.max(78, detailY + 6);
+}
+
+function drawPDFTableHeader(pdf, y) {
+  const C = PDF_CONFIG;
+
+  pdf.setFillColor(...C.navy);
+  pdf.rect(15, y, 180, 9, "F");
+
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(8);
+
+  pdfText(pdf, "#", 18, y + 5.8);
+  pdfText(pdf, "DESCRIPTION", 29, y + 5.8);
+  pdfText(pdf, "QUANTITY", 111, y + 5.8);
+  pdfText(pdf, "RATE", 162, y + 5.8, {
+    align: "right",
+  });
+  pdfText(pdf, "AMOUNT", 192, y + 5.8, {
+    align: "right",
+  });
+
+  return y + 9;
+}
+
+function measurePDFRow(pdf, item) {
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(8.7);
+
+  const descriptionLines = pdf.splitTextToSize(
+    String(item.description || ""),
+    75,
+  );
+
+  const qtyLines = pdf.splitTextToSize(
+    normalizedQty(item),
+    37,
+  );
+
+  const lineCount = Math.max(
+    descriptionLines.length,
+    qtyLines.length,
+    1,
+  );
+
+  return {
+    descriptionLines,
+    qtyLines,
+    height: Math.max(7.1, lineCount * 4.2 + 2.8),
+  };
+}
+
+function drawPDFRow(pdf, item, index, y, measured) {
+  const C = PDF_CONFIG;
+
+  setPDFColor(pdf, C.ink);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(8.5);
+
+  pdfText(pdf, index + 1, 18, y + 4.8);
+  pdf.text(measured.descriptionLines, 29, y + 4.8);
+  pdf.text(measured.qtyLines, 111, y + 4.8);
+
+  pdfText(pdf, numberText(item.rate), 162, y + 4.8, {
+    align: "right",
+  });
+
+  pdfText(
+    pdf,
+    numberText(itemAmount(item)),
+    192,
+    y + 4.8,
+    { align: "right" },
+  );
+
+  pdf.setDrawColor(...C.line);
+  pdf.setLineWidth(0.15);
+  pdf.line(15, y + measured.height, 195, y + measured.height);
+
+  return y + measured.height;
+}
+
+function drawPDFFooter(pdf, pageNumber, totalPages) {
+  const C = PDF_CONFIG;
+
+  pdf.setDrawColor(...C.line);
+  pdf.setLineWidth(0.25);
+  pdf.line(15, 281, 195, 281);
+
+  setPDFColor(pdf, C.ink);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(7.3);
+  pdfText(pdf, "UMAIR TRADERS", 15, 286);
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(7);
+  pdfText(
+    pdf,
+    "27-E, Gulberg Main Market, Lahore | +92-309-9444429",
+    195,
+    286,
+    { align: "right" },
+  );
+
+  setPDFColor(pdf, C.muted);
+  pdf.setFontSize(6.8);
+  pdfText(
+    pdf,
+    `Page ${pageNumber} of ${totalPages}`,
+    195,
+    292,
+    { align: "right" },
+  );
+}
+
+function drawPDFFinalSection(pdf, invoice, y, stamp) {
+  const C = PDF_CONFIG;
+
+  const totalX = 117;
+  const totalW = 78;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  setPDFColor(pdf, C.ink);
+
+  pdfText(pdf, "Subtotal", totalX + 3, y + 7);
+  pdfText(
+    pdf,
+    money(invoice.subtotal),
+    totalX + totalW - 3,
+    y + 7,
+    { align: "right" },
+  );
+
+  y += 10;
+
+  if (Number(invoice.discount) > 0) {
+    pdfText(pdf, "Discount", totalX + 3, y + 6);
+    pdfText(
+      pdf,
+      "- " + money(invoice.discount),
+      totalX + totalW - 3,
+      y + 6,
+      { align: "right" },
+    );
+    y += 9;
+  }
+
+  pdf.setFillColor(...C.light);
+  pdf.setDrawColor(...C.navy);
+  pdf.setLineWidth(0.45);
+  pdf.line(totalX, y, 195, y);
+
+  pdf.rect(totalX, y, totalW, 11, "F");
+
+  setPDFColor(pdf, C.navy);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(9.2);
+  pdfText(pdf, "GRAND TOTAL", totalX + 3, y + 7);
+
+  pdfText(
+    pdf,
+    money(invoice.total),
+    192,
+    y + 7,
+    { align: "right" },
+  );
+
+  y += 16;
+
+  if (invoice.notes) {
+    setPDFColor(pdf, C.muted);
+    pdf.setFontSize(8);
+    pdfText(pdf, "NOTES", 15, y + 3);
+
+    pdf.setFont("helvetica", "normal");
+    setPDFColor(pdf, C.ink);
+
+    const lines = pdf.splitTextToSize(
+      String(invoice.notes),
+      105,
+    );
+
+    pdf.text(lines, 15, y + 8);
+  }
+
+  const signatureLineY = Math.max(y + 25, 265);
+
+  if (invoice.stamp !== false && stamp) {
+    const fitted = fitImage(
+      stamp,
+      151,
+      signatureLineY - 29,
+      28,
+      26,
+    );
+
+    pdf.addImage(
+      stamp.data,
+      "PNG",
+      fitted.x,
+      fitted.y,
+      fitted.width,
+      fitted.height,
+    );
+  }
+
+  pdf.setDrawColor(90, 106, 126);
+  pdf.setLineWidth(0.25);
+  pdf.line(145, signatureLineY, 195, signatureLineY);
+
+  setPDFColor(pdf, C.ink);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(7.5);
+  pdfText(
+    pdf,
+    "Authorized Signature / Stamp",
+    170,
+    signatureLineY + 4,
+    { align: "center" },
+  );
+}
+
+async function generateInvoicePDF(invoice) {
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+    compress: true,
+  });
+
+  const [logo, stamp] = await Promise.all([
+    loadImageData("/assets/logo.png"),
+    loadImageData("/assets/stamp.png"),
+  ]);
+
+  const items = invoice.items || [];
+
+  const pages = [];
+  let page = [];
+  let currentHeight = 0;
+
+  // A4 content region, excluding header and footer.
+  // 25 standard single-line rows fit comfortably.
+  const MAX_ROWS_PER_PAGE = 25;
+  const MAX_ROW_HEIGHT = 176;
+
+  items.forEach((item, index) => {
+    const measured = measurePDFRow(pdf, item);
+
+    const exceedsRows = page.length >= MAX_ROWS_PER_PAGE;
+    const exceedsHeight =
+      currentHeight + measured.height > MAX_ROW_HEIGHT;
+
+    if (page.length && (exceedsRows || exceedsHeight)) {
+      pages.push(page);
+      page = [];
+      currentHeight = 0;
+    }
+
+    page.push({ item, index, measured });
+    currentHeight += measured.height;
+  });
+
+  if (page.length || !pages.length) {
+    pages.push(page);
+  }
+
+  // Reserve the final section on the last page.
+  const finalPage = pages[pages.length - 1];
+
+  const finalRowsHeight = finalPage.reduce(
+    (sum, entry) => sum + entry.measured.height,
+    0,
+  );
+
+  const notesLines = invoice.notes
+    ? pdf.splitTextToSize(String(invoice.notes), 105).length
+    : 0;
+
+  const finalSectionHeight =
+    58 +
+    (Number(invoice.discount) > 0 ? 9 : 0) +
+    notesLines * 4.2;
+
+  // Header/table starts at approximately 87 mm.
+  const finalAvailableHeight = 265 - 87;
+
+  while (
+    finalPage.length > 1 &&
+    finalPage.reduce(
+      (sum, entry) => sum + entry.measured.height,
+      0,
+    ) +
+      finalSectionHeight >
+      finalAvailableHeight
+  ) {
+    const moved = finalPage.shift();
+
+    if (pages.length === 1) {
+      pages.unshift([moved]);
+    } else {
+      pages[pages.length - 2].push(moved);
+    }
+  }
+
+  // If the final page still has insufficient room,
+  // put totals/signature on a dedicated final page.
+  let separateFinalPage = false;
+
+  const remainingHeight = finalPage.reduce(
+    (sum, entry) => sum + entry.measured.height,
+    0,
+  );
+
+  if (
+    remainingHeight + finalSectionHeight >
+    finalAvailableHeight
+  ) {
+    separateFinalPage = true;
+  }
+
+  const totalPages =
+    pages.length + (separateFinalPage ? 1 : 0);
+
+  pages.forEach((entries, pageIndex) => {
+    if (pageIndex > 0) pdf.addPage();
+
+    let y = drawPDFHeader(
+      pdf,
+      invoice,
+      logo,
+      pageIndex,
+    );
+
+    y = drawPDFTableHeader(pdf, y);
+
+    entries.forEach(({ item, index, measured }) => {
+      y = drawPDFRow(
+        pdf,
+        item,
+        index,
+        y,
+        measured,
+      );
+    });
+
+    if (
+      pageIndex === pages.length - 1 &&
+      !separateFinalPage
+    ) {
+      drawPDFFinalSection(
+        pdf,
+        invoice,
+        y + 5,
+        stamp,
+      );
+    }
+
+    drawPDFFooter(
+      pdf,
+      pageIndex + 1,
+      totalPages,
+    );
+  });
+
+  if (separateFinalPage) {
+    pdf.addPage();
+
+    const y = drawPDFHeader(
+      pdf,
+      invoice,
+      logo,
+      pages.length,
+    );
+
+    drawPDFFinalSection(
+      pdf,
+      invoice,
+      y + 12,
+      stamp,
+    );
+
+    drawPDFFooter(
+      pdf,
+      totalPages,
+      totalPages,
+    );
+  }
+
+  return pdf;
+}
+
+/* VIEW / DOWNLOAD / PRINT */
 
 function view() {
   const invoice = state.invoices.find(
@@ -1243,7 +1731,6 @@ function view() {
         <h1>${esc(invoice.number)}</h1>
         <p>Review, print or download this invoice.</p>
       </div>
-
       <button class="secondary" id="back">
         ← All invoices
       </button>
@@ -1278,7 +1765,30 @@ function view() {
 
   $("#back").onclick = () => navigate("invoices");
 
-  $("#print").onclick = () => window.print();
+  $("#print").onclick = async () => {
+    const button = $("#print");
+    button.disabled = true;
+
+    try {
+      const pdf = await generateInvoicePDF(invoice);
+      const blob = pdf.output("blob");
+      const url = URL.createObjectURL(blob);
+      const printWindow = window.open(url, "_blank");
+
+      if (!printWindow) {
+        notice(
+          "Pop-up blocked. Download the PDF and print it.",
+          true,
+        );
+      }
+
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (error) {
+      notice("Print preparation failed: " + error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  };
 
   $("#edit").onclick = () => {
     state.editId = invoice.id;
@@ -1324,123 +1834,26 @@ function view() {
 
   $("#download").onclick = async () => {
     const button = $("#download");
-
     button.disabled = true;
     button.textContent = "Generating PDF...";
 
-    let host = null;
-
     try {
-      const clone = $("#paper").cloneNode(true);
-      clone.removeAttribute("id");
-
-      host = document.createElement("div");
-      host.className = "pdf-render-host";
-      host.appendChild(clone);
-
-      document.body.appendChild(host);
-
-      await Promise.all(
-        [...clone.querySelectorAll("img")].map((image) => {
-          if (image.complete) return Promise.resolve();
-
-          return new Promise((resolve) => {
-            image.onload = resolve;
-            image.onerror = resolve;
-          });
-        }),
-      );
-
-      if (document.fonts?.ready) {
-        await document.fonts.ready;
-      }
-
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        useCORS: true,
-        width: clone.scrollWidth,
-        height: clone.scrollHeight,
-        windowWidth: 1200,
-      });
-
-      const pdf = new jsPDF("p", "mm", "a4");
-
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-
-      const actualHeightMm =
-        (canvas.height * pageW) / canvas.width;
-
-      if (actualHeightMm <= pageH + 1) {
-        pdf.addImage(
-          canvas.toDataURL("image/jpeg", 0.94),
-          "JPEG",
-          0,
-          0,
-          pageW,
-          Math.min(actualHeightMm, pageH),
-        );
-      } else {
-        const pagePx = Math.floor(
-          (canvas.width * pageH) / pageW,
-        );
-
-        for (
-          let offset = 0;
-          offset < canvas.height;
-          offset += pagePx
-        ) {
-          const sliceHeight = Math.min(
-            pagePx,
-            canvas.height - offset,
-          );
-
-          const slice = document.createElement("canvas");
-          slice.width = canvas.width;
-          slice.height = sliceHeight;
-
-          slice
-            .getContext("2d")
-            .drawImage(
-              canvas,
-              0,
-              offset,
-              canvas.width,
-              sliceHeight,
-              0,
-              0,
-              canvas.width,
-              sliceHeight,
-            );
-
-          if (offset > 0) pdf.addPage();
-
-          pdf.addImage(
-            slice.toDataURL("image/jpeg", 0.94),
-            "JPEG",
-            0,
-            0,
-            pageW,
-            (sliceHeight * pageW) / canvas.width,
-          );
-        }
-      }
-
+      const pdf = await generateInvoicePDF(invoice);
       pdf.save(`${invoice.number}.pdf`);
     } catch (error) {
-      notice("PDF generation failed: " + error.message, true);
+      console.error("PDF generation:", error);
+      notice(
+        "PDF generation failed: " + error.message,
+        true,
+      );
     } finally {
-      host?.remove();
       button.disabled = false;
       button.textContent = "↓ Download PDF";
     }
   };
 }
 
-/* =========================
-   FIREBASE AUTHORIZATION
-========================= */
+/* FIREBASE AUTHORIZATION */
 
 if (!configured) {
   login();
@@ -1462,7 +1875,6 @@ if (!configured) {
         access.data()?.active !== true
       ) {
         await signOut(auth);
-
         state.user = null;
         login();
 
@@ -1470,7 +1882,6 @@ if (!configured) {
           "Account is not authorized or inactive.",
           true,
         );
-
         return;
       }
 
