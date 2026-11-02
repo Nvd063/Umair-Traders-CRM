@@ -230,7 +230,7 @@ function shell() {
     <div class="layout">
       <aside class="sidebar">
         <div class="brand">
-          <img src="/assets/logo.png" alt="Umair Traders">
+          <img src="/assets/logo.jfif" alt="Umair Traders">
           <span>
             Billing CRM
             <small>Management portal</small>

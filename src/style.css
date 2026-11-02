@@ -1320,3 +1320,56 @@ body,
     print-color-adjust: exact;
   }
 }
+
+
+/* UMAIR TRADERS — FIX LOGO SIZE IN PDF */
+
+.paper-top .paper-logo {
+  display: block !important;
+
+  width: 180px !important;
+  height: 110px !important;
+
+  max-width: 180px !important;
+  max-height: 110px !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  object-fit: contain !important;
+  object-position: left center !important;
+
+  flex-shrink: 0 !important;
+  transform: none !important;
+}
+
+/* Keep invoice header aligned */
+
+.paper-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+}
+
+/* Same logo dimensions during PDF generation */
+
+.pdf-render-host .paper-top .paper-logo {
+  width: 180px !important;
+  height: 110px !important;
+  max-width: 180px !important;
+  max-height: 110px !important;
+  object-fit: contain !important;
+}
+
+/* Prevent logo enlargement when printing */
+
+@media print {
+  .paper-top .paper-logo {
+    width: 180px !important;
+    height: 110px !important;
+    max-width: 180px !important;
+    max-height: 110px !important;
+    object-fit: contain !important;
+  }
+}
